@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpmyadmin-deployment
+  namespace: phpmyadmin-mysql
+  labels:
+    app: phpmyadmin-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpmyadmin-mysql
+  template:
+    metadata:
+      labels:
+        app: phpmyadmin-mysql
+    spec:
+      containers:
+        - name: phpmyadmin-mysql
+          image: phpmyadmin/phpmyadmin
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - mountPath: "/var/lib/mysql"
+              subPath: "mysql"
+              name: mysql-data
+          env:
+            - name: PMA_HOST
+              value: mysql-service
+            - name: PMA_PORT
+              value: "3306"
+            #- name: PMA_USER
+              #valueFrom:
+                #secretKeyRef:
+                  #name: phpmyadmin-secret
+                  #key: root_username 
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: phpmyadmin-secret
+                  key: root_password
+      volumes:
+        - name: mysql-data
+          persistentVolumeClaim:
+            claimName: mysql-data-disk
+          
